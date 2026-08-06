@@ -1,16 +1,13 @@
-const CACHE_NAME = "baseball-lineup-v2";
+const CACHE_NAME = "baseball-lineup-v3";
 const APP_FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./app-icon.svg",
-  "./print.css"
+  "./app-icon.svg"
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
   self.skipWaiting();
 });
 
@@ -25,31 +22,6 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
-
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then(async response => {
-          const html = await response.text();
-          const linkedHtml = html.includes("print.css")
-            ? html
-            : html.replace("</head>", '<link rel="stylesheet" href="./print.css"></head>');
-
-          const updatedResponse = new Response(linkedHtml, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: { "Content-Type": "text/html; charset=utf-8" }
-          });
-
-          const cacheCopy = updatedResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put("./index.html", cacheCopy));
-          return updatedResponse;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
-    return;
-  }
-
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -57,6 +29,6 @@ self.addEventListener("fetch", event => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(event.request).then(cached => cached || caches.match("./index.html")))
   );
 });
