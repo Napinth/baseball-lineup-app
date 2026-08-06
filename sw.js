@@ -1,4 +1,4 @@
-const CACHE_NAME = "baseball-lineup-v3";
+const CACHE_NAME = "baseball-lineup-v4";
 const APP_FILES = [
   "./",
   "./index.html",
